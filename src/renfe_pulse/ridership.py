@@ -9,6 +9,8 @@ from typing import Any
 
 import requests
 
+from .stations import title_case
+
 
 def fetch(session: requests.Session, url: str) -> list[dict[str, str]]:
     resp = session.get(url)
@@ -42,7 +44,7 @@ def summarize(rows: list[dict[str, str]], top: int = 10) -> list[dict[str, Any]]
             continue
         profile[nucleo][slot][0] += up
         profile[nucleo][slot][1] += down
-        stations[nucleo][_station_label(row.get("NOMBRE_ESTACION", ""))] += up + down
+        stations[nucleo][title_case(" ".join(row.get("NOMBRE_ESTACION", "").split()))] += up + down
 
     out = []
     for nucleo, slots in profile.items():
@@ -66,10 +68,6 @@ def _nucleo_label(value: str) -> str:
     if value.endswith(" AM"):
         value = value[:-3] + " (ancho métrico)"
     return value[:1] + value[1:].lower() if value else value
-
-
-def _station_label(value: str) -> str:
-    return " ".join(w.capitalize() for w in value.split())
 
 
 def _int(value: str | None) -> int:

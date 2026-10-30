@@ -40,13 +40,13 @@ def parse(data: bytes) -> list[Station]:
         out.append(
             Station(
                 code=row["CODIGO"],
-                name=_title(row.get("DESCRIPCION", "")),
+                name=title_case(row.get("DESCRIPCION", "")),
                 lat=_float(row.get("LATITUD")),
                 lon=_float(row.get("LONGITUD")),
                 address=row.get("DIRECION") or row.get("DIRECCION", ""),
                 postal_code=row.get("CP", ""),
-                town=_title(row.get("POBLACION", "")),
-                province=_title(row.get("PROVINCIA", "")),
+                town=title_case(row.get("POBLACION", "")),
+                province=title_case(row.get("PROVINCIA", "")),
                 cercanias=row.get("CERCANIAS", "").upper() == "SI",
                 ancho_metrico=row.get("ANCHO MÉTRICO", "").upper() == "SI",
             )
@@ -64,7 +64,7 @@ def _decode(data: bytes) -> str:
 _LOWER = {"de", "del", "la", "las", "el", "los", "y", "i", "d'", "l'"}
 
 
-def _title(value: str) -> str:
+def title_case(value: str) -> str:
     """`MADRID-PUERTA DE ATOCHA` -> `Madrid-Puerta de Atocha`."""
     words = []
     for i, word in enumerate(value.lower().split(" ")):
