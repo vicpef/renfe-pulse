@@ -181,6 +181,25 @@
     return map;
   }
 
+  // En una pestaña abierta en segundo plano el mapa puede medir 0 px al cargar y `fitBounds`
+  // saltaría al zoom máximo: esperamos a que el contenedor tenga tamaño.
+  function fitWhenSized(map, latLngs, options) {
+    if (!latLngs.length) return;
+    const el = map.getContainer();
+    const fit = () => {
+      map.invalidateSize();
+      map.fitBounds(L.latLngBounds(latLngs), options);
+    };
+    if (el.clientWidth && el.clientHeight) return fit();
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth && el.clientHeight) {
+        observer.disconnect();
+        fit();
+      }
+    });
+    observer.observe(el);
+  }
+
   function trainPopup(t) {
     if (t.kind === "cercanias") {
       const where = t.stop ? `${esc(t.status)} ${esc(t.stop)}` : esc(t.status);
@@ -241,7 +260,7 @@
       markers.set(`${t.kind}-${t.id}`, marker);
     }
     Object.values(layers).forEach((l) => l.addTo(map));
-    if (trains.length) map.fitBounds(L.latLngBounds(trains.map((t) => [t.lat, t.lon])), { padding: [20, 20] });
+    fitWhenSized(map, trains.map((t) => [t.lat, t.lon]), { padding: [20, 20] });
 
     let stations;
     $$("input[data-layer]").forEach((input) => {
@@ -363,7 +382,7 @@
     province.addEventListener("change", apply);
     onlyCercanias.addEventListener("change", apply);
     apply();
-    if (map && markers.size) map.fitBounds(L.latLngBounds([...markers.values()].map((m) => m.getLatLng())), { padding: [10, 10] });
+    if (map) fitWhenSized(map, [...markers.values()].map((m) => m.getLatLng()), { padding: [10, 10] });
   }
 
   /* ---------- Filtros de listas y tablas ---------- */
