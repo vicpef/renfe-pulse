@@ -4,7 +4,10 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "17 * * * *" # cada hora (UTC); GitHub puede retrasar unos minutos las ejecuciones
+    # Cada 30 min de 06:00 a 23:30, hora de Madrid. El cron de GitHub va en UTC y España cambia
+    # de hora, así que cubrimos de 04:00 a 22:30 UTC y el job `horario` descarta lo que cae fuera
+    # en hora local. GitHub puede retrasar unos minutos las ejecuciones programadas.
+    - cron: "0,30 4-22 * * *"
   workflow_dispatch:
 
 permissions:
@@ -17,7 +20,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  horario:
+    runs-on: ubuntu-latest
+    outputs:
+      publicar: ${{ steps.check.outputs.publicar }}
+    steps:
+      - id: check
+        run: |
+          hora=$(TZ=Europe/Madrid date +%-H)
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ] || [ "$hora" -ge 6 ]; then
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Son las $(TZ=Europe/Madrid date +%H:%M) en Madrid: no se publica hasta las 06:00."
+            echo "publicar=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: horario
+    if: needs.horario.outputs.publicar == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

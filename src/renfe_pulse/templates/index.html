@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head">
   <h1>La red de Renfe, ahora</h1>
-  <p>Un resumen de los <a href="https://data.renfe.com/dataset">datos abiertos de Renfe</a>: trenes circulando, puntualidad de Cercanías y avisos activos, regenerado cada hora.</p>
+  <p>Un resumen de los <a href="https://data.renfe.com/dataset">datos abiertos de Renfe</a>: trenes circulando, puntualidad de Cercanías y avisos activos, regenerado cada media hora de 6:00 a 23:30.</p>
   <div class="stamp">Instantánea de las <time datetime="{{ meta.generated_at }}">{{ meta.generated_at|fecha }}</time> (hora peninsular)</div>
 </div>
 
@@ -21,7 +21,7 @@
 <section class="grid-2">
   <div class="card">
     <h2>Trenes en circulación</h2>
-    <p class="sub">Cada punto es una actualización horaria (últimos 30 días)</p>
+    <p class="sub">Cada punto es una actualización, cada 30 min (últimos 30 días)</p>
     <ul class="legend">
       <li><span class="swatch" style="background:var(--series-1)"></span>Cercanías</li>
       <li><span class="swatch" style="background:var(--series-2)"></span>AV, LD y MD</li>

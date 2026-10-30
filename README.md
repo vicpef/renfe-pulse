@@ -1,8 +1,8 @@
 # Renfe Pulse
 
 Panel estático con los [datos abiertos de Renfe](https://data.renfe.com/dataset), generado
-en Python y publicado en GitHub Pages. Un workflow de GitHub Actions lo regenera **cada hora**
-con los datos en tiempo real.
+en Python y publicado en GitHub Pages. Un workflow de GitHub Actions lo regenera **cada 30 minutos
+de 6:00 a 23:30** (hora de Madrid) con los datos en tiempo real.
 
 | Página | Qué muestra | Datasets de Renfe |
 |---|---|---|
@@ -20,7 +20,7 @@ para quien quiera reutilizarlos.
 ## Cómo funciona
 
 ```
-GitHub Actions (cada hora)
+GitHub Actions (cada 30 min, 06:00–23:30 hora de Madrid)
   └─ python -m renfe_pulse build
        ├─ API CKAN de data.renfe.com ........ catálogo de datasets
        ├─ GTFS estáticos (zip) .............. líneas, colores, paradas, recorridos AV/LD
@@ -70,14 +70,16 @@ publicado.
 
 1. *Settings → Pages → Build and deployment → Source:* **GitHub Actions**.
 2. El workflow [`pages.yml`](.github/workflows/pages.yml) se ejecuta en cada push a `main`,
-   cada hora y a mano (*Actions → Publicar sitio → Run workflow*).
+   cada 30 minutos de 06:00 a 23:30 (hora de Madrid) y a mano (*Actions → Publicar sitio →
+   Run workflow*). El cron va en UTC; un job previo comprueba la hora de Madrid para que el
+   horario se mantenga igual en verano y en invierno.
 
 Notas:
 
 - GitHub Pages en un repositorio **privado** requiere un plan de pago (Pro, Team o
-  Enterprise). Aun así, el sitio publicado es público salvo en Enterprise Cloud.
-- Las ejecuciones programadas consumen minutos de Actions (≈1 min por ejecución, unos
-  720 min/mes). Para reducirlo, cambia el `cron` del workflow.
+  Enterprise); por eso este repositorio es público.
+- En un repositorio público los minutos de Actions son gratuitos. Si lo haces privado,
+  cada ejecución consume ≈1,5 min (unos 1.600 min/mes con este horario).
 - GitHub desactiva los workflows programados tras 60 días sin actividad en el repositorio.
 
 ## Licencias
