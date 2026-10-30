@@ -8,7 +8,7 @@ from urllib3.util.retry import Retry
 
 from . import __version__
 
-USER_AGENT = f"renfe-pulse/{__version__} (+https://github.com/; datos abiertos de Renfe)"
+USER_AGENT = f"renfe-pulse/{__version__} (+https://github.com/vicpef/renfe-pulse)"
 DEFAULT_TIMEOUT = 60
 
 
