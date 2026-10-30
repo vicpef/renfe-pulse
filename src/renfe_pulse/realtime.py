@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import requests
@@ -12,6 +13,16 @@ import requests
 class Feed:
     timestamp: int
     entities: list[dict[str, Any]]
+    last_modified: int | None = None
+
+    @property
+    def updated(self) -> int:
+        """Hora de la última actualización del feed.
+
+        Preferimos la cabecera HTTP `Last-Modified`: el `timestamp` de la cabecera GTFS-RT
+        del feed de AV/LD llega desplazado una hora.
+        """
+        return self.last_modified or self.timestamp
 
 
 @dataclass
@@ -48,7 +59,9 @@ class Alert:
 def fetch_feed(session: requests.Session, url: str) -> Feed:
     resp = session.get(url)
     resp.raise_for_status()
-    return parse_feed(resp.json())
+    feed = parse_feed(resp.json())
+    feed.last_modified = _http_date(resp.headers.get("Last-Modified"))
+    return feed
 
 
 def parse_feed(payload: dict[str, Any]) -> Feed:
@@ -135,6 +148,15 @@ def _translation(text: dict[str, Any] | None, lang: str = "es") -> str:
         if t.get("language") == lang:
             return t.get("text", "").strip()
     return translations[0].get("text", "").strip() if translations else ""
+
+
+def _http_date(value: str | None) -> int | None:
+    if not value:
+        return None
+    try:
+        return int(parsedate_to_datetime(value).timestamp())
+    except (TypeError, ValueError):
+        return None
 
 
 def _int(value: Any) -> int | None:

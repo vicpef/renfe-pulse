@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block description %}Mapa de los trenes de Renfe en circulación: Cercanías, Alta Velocidad, Larga y Media Distancia.{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Trenes en circulación</h1>
+  <p>Posición GPS de los trenes según los feeds en tiempo real de Renfe. Cercanías aparece con el color de su línea; Alta Velocidad, Larga y Media Distancia como rombos.</p>
+  <div class="stamp">
+    Cercanías: <time datetime="{{ meta.feeds.cercanias }}">{{ meta.feeds.cercanias|fecha }}</time> ·
+    AV/LD/MD: <time datetime="{{ meta.feeds.ld }}">{{ meta.feeds.ld|fecha }}</time>
+  </div>
+</div>
+
+<section>
+  <div class="filters" role="group" aria-label="Capas del mapa">
+    <label class="check"><input type="checkbox" data-layer="cercanias" checked> <span class="swatch dot" style="background:var(--text-2)"></span>Cercanías ({{ live.counts.cercanias }})</label>
+    <label class="check"><input type="checkbox" data-layer="Alta Velocidad" checked> <span class="swatch diamond" style="background:var(--series-1)"></span>Alta Velocidad ({{ live.counts['Alta Velocidad'] or 0 }})</label>
+    <label class="check"><input type="checkbox" data-layer="Larga Distancia" checked> <span class="swatch diamond" style="background:var(--series-2)"></span>Larga Distancia ({{ live.counts['Larga Distancia'] or 0 }})</label>
+    <label class="check"><input type="checkbox" data-layer="Media Distancia" checked> <span class="swatch diamond" style="background:var(--series-3)"></span>Media Distancia ({{ live.counts['Media Distancia'] or 0 }})</label>
+    <label class="check"><input type="checkbox" data-layer="stations"> <span class="swatch dot" style="background:var(--station)"></span>Estaciones</label>
+    <select id="nucleo-filter" aria-label="Centrar en un núcleo">
+      <option value="">Toda España</option>
+    </select>
+  </div>
+  <div id="map" class="map" role="region" aria-label="Mapa de trenes"></div>
+</section>
+
+<section class="card">
+  <h2>Listado</h2>
+  <p class="sub">Los mismos trenes en forma de tabla</p>
+  <div class="filters"><input type="search" id="train-search" placeholder="Buscar por línea, tren, núcleo o estación…" aria-label="Buscar trenes"><span class="count" id="train-count"></span></div>
+  <div class="table-wrap">
+    <table id="train-table">
+      <thead><tr><th>Servicio</th><th>Tren</th><th>Zona / recorrido</th><th>Estado</th><th class="num">Retraso</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<script type="application/json" id="trains-data">{{ live.trains|tojson_safe }}</script>
+<script type="application/json" id="stations-data">{{ station_points|tojson_safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="static/app.js"></script>
+{% endblock %}

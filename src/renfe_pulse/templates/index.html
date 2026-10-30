@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import kpi, line_pill, alert_item, punctuality_bars %}
+{% set s = delays.summary %}
+
+{% block content %}
+<div class="page-head">
+  <h1>La red de Renfe, ahora</h1>
+  <p>Un resumen de los <a href="https://data.renfe.com/dataset">datos abiertos de Renfe</a>: trenes circulando, puntualidad de Cercanías y avisos activos, regenerado cada hora.</p>
+  <div class="stamp">Instantánea de las <time datetime="{{ meta.generated_at }}">{{ meta.generated_at|fecha }}</time> (hora peninsular)</div>
+</div>
+
+<section class="kpis" aria-label="Indicadores principales">
+  {{ kpi("Cercanías en circulación", live.counts.cercanias|num, hint="trenes con posición GPS") }}
+  {{ kpi("AV, LD y MD en circulación", live.counts.ld|num, hint="Alta Velocidad, Larga y Media Distancia") }}
+  {{ kpi("Puntualidad Cercanías", s.punctual_pct|num(1), " %", "retraso menor de " ~ s.threshold_min ~ " min") }}
+  {{ kpi("Retraso medio", s.avg_delay_min|num(1), " min", "sobre " ~ (s.trips|num) ~ " viajes con seguimiento") }}
+  {{ kpi("Viajes cancelados", s.canceled|num, hint="en el feed de Cercanías") }}
+  {{ kpi("Avisos publicados", alerts|length|num, hint="incidencias y obras") }}
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Trenes en circulación</h2>
+    <p class="sub">Cada punto es una actualización horaria (últimos 30 días)</p>
+    <ul class="legend">
+      <li><span class="swatch" style="background:var(--series-1)"></span>Cercanías</li>
+      <li><span class="swatch" style="background:var(--series-2)"></span>AV, LD y MD</li>
+    </ul>
+    <div class="chart-box" id="chart-trains" aria-label="Evolución del número de trenes en circulación"></div>
+  </div>
+  <div class="card">
+    <h2>Puntualidad de Cercanías</h2>
+    <p class="sub">% de viajes con menos de {{ s.threshold_min }} min de retraso en cada actualización</p>
+    <div class="chart-box" id="chart-punctuality" aria-label="Evolución de la puntualidad de Cercanías" style="margin-top:31px"></div>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Puntualidad por núcleo</h2>
+    <p class="sub">% de viajes con menos de {{ s.threshold_min }} min de retraso, ahora mismo</p>
+    {% if delays.by_nucleo %}{{ punctuality_bars(delays.by_nucleo|sort(attribute='punctual_pct')) }}{% else %}<p class="empty">Sin datos de retrasos.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Mayores retrasos ahora</h2>
+    <p class="sub">Trenes de Cercanías con más retraso acumulado · <a href="retrasos.html">ver todos</a></p>
+    {% if delays.worst %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Línea</th><th>Tren</th><th>Núcleo</th><th>Próxima parada</th><th class="num">Retraso</th></tr></thead>
+        <tbody>
+        {% for w in delays.worst[:8] %}
+          <tr><td>{{ line_pill(w) }}</td><td>{{ w.train }}</td><td>{{ w.nucleo }}</td><td>{{ w.next_stop or "—" }}</td><td class="num delay">+{{ w.delay_min }} min</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<p class="empty">Ningún tren acumula más de un minuto de retraso.</p>{% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Últimos avisos</h2>
+  <p class="sub">Del feed «Incidencias y avisos» · <a href="avisos.html">ver los {{ alerts|length }}</a>{% if 'alerts' in meta.stale_feeds %} · ⚠️ sin actualizar desde el {{ meta.feeds.alerts|fecha(false) }}{% endif %}</p>
+  {% if alerts %}
+  <ul class="alerts">{% for a in alerts[:5] %}{{ alert_item(a) }}{% endfor %}</ul>
+  {% else %}<p class="empty">No hay avisos publicados.</p>{% endif %}
+</section>
+
+<script type="application/json" id="history-data">{{ history|tojson_safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="static/app.js"></script>
+{% endblock %}

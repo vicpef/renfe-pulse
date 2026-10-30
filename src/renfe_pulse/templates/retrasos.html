@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_macros.html" import kpi, line_pill, delay_bars %}
+{% set s = delays.summary %}
+{% block description %}Puntualidad de los trenes de Cercanías de Renfe por núcleo y línea, según los datos en tiempo real.{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Retrasos en Cercanías</h1>
+  <p>Calculado a partir del feed «Horarios de viaje» (GTFS-Realtime), que informa del retraso de cada viaje en curso. Renfe considera puntual un tren que llega con menos de {{ s.threshold_min }} minutos de retraso.</p>
+  <div class="stamp">Datos de <time datetime="{{ meta.feeds.updates }}">{{ meta.feeds.updates|fecha }}</time></div>
+</div>
+
+<section class="kpis">
+  {{ kpi("Viajes con seguimiento", s.trips|num) }}
+  {{ kpi("Puntuales", s.punctual_pct|num(1), " %", "menos de " ~ s.threshold_min ~ " min") }}
+  {{ kpi("Retraso medio", s.avg_delay_min|num(1), " min") }}
+  {{ kpi("Retraso máximo", s.max_delay_min|num, " min") }}
+  {{ kpi("Cancelados", s.canceled|num) }}
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Distribución de retrasos</h2>
+    <p class="sub">Número de viajes según su retraso actual</p>
+    {{ delay_bars(delays.buckets) }}
+  </div>
+  <div class="card">
+    <h2>Por núcleo</h2>
+    <p class="sub">Ordenado por número de viajes con seguimiento</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Núcleo</th><th class="num">Viajes</th><th class="num">Puntuales</th><th class="num">Medio</th><th class="num">Máx.</th><th class="num">Cancel.</th></tr></thead>
+        <tbody>
+        {% for r in delays.by_nucleo %}
+          <tr><td>{{ r.nucleo }}</td><td class="num">{{ r.trips|num }}</td><td class="num">{{ r.punctual_pct|num(1) }} %</td><td class="num">{{ r.avg_delay_min|num(1) }} min</td><td class="num">{{ r.max_delay_min|num }} min</td><td class="num">{{ r.canceled|num }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Por línea</h2>
+  <p class="sub">Retraso medio y puntualidad de cada línea con viajes en curso</p>
+  <div class="filters">
+    <select data-filter-table="lines-table" data-filter-key="nucleo" aria-label="Filtrar por núcleo">
+      <option value="">Todos los núcleos</option>
+      {% for r in delays.by_nucleo %}<option>{{ r.nucleo }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table id="lines-table">
+      <thead><tr><th>Línea</th><th>Núcleo</th><th class="num">Viajes</th><th class="num">Puntuales</th><th class="num">Medio</th><th class="num">Máx.</th></tr></thead>
+      <tbody>
+      {% for r in delays.by_line %}
+        <tr data-nucleo="{{ r.nucleo }}"><td>{{ line_pill(r) }}</td><td>{{ r.nucleo }}</td><td class="num">{{ r.trips|num }}</td><td class="num">{{ r.punctual_pct|num(1) }} %</td><td class="num">{{ r.avg_delay_min|num(1) }} min</td><td class="num">{{ r.max_delay_min|num }} min</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Trenes con más retraso</h2>
+    <p class="sub">Los {{ delays.worst|length }} viajes con un minuto o más de retraso</p>
+    {% if delays.worst %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Línea</th><th>Tren</th><th>Núcleo</th><th>Próxima parada</th><th class="num">Retraso</th></tr></thead>
+        <tbody>
+        {% for w in delays.worst %}
+          <tr><td>{{ line_pill(w) }}</td><td>{{ w.train }}</td><td>{{ w.nucleo }}</td><td>{{ w.next_stop or "—" }}{% if w.eta %} <span class="sub">({{ w.eta[11:16] }})</span>{% endif %}</td><td class="num delay">+{{ w.delay_min }} min</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<p class="empty">Ningún tren acumula un minuto de retraso.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Viajes cancelados</h2>
+    <p class="sub">Marcados como CANCELED en el feed</p>
+    {% if delays.canceled %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Línea</th><th>Tren</th><th>Núcleo</th></tr></thead>
+        <tbody>
+        {% for c in delays.canceled %}<tr><td>{{ line_pill(c) }}</td><td>{{ c.train }}</td><td>{{ c.nucleo }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<p class="empty">No hay viajes cancelados.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="static/app.js"></script>{% endblock %}

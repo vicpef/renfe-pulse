@@ -1,0 +1,48 @@
+{% macro line_pill(l) -%}
+<span class="line" style="background:{{ l.color }};color:{{ l.textColor }}">{{ l.line or l.name }}</span>
+{%- endmacro %}
+
+{% macro kpi(label, value, unit="", hint="") -%}
+<div class="kpi">
+  <div class="label">{{ label }}</div>
+  <div class="value">{{ value }}{% if unit %}<small>{{ unit }}</small>{% endif %}</div>
+  {% if hint %}<div class="hint">{{ hint }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro alert_item(a) -%}
+<li class="alert" data-nucleos="{{ a.nucleos|join('|') }}" data-kind="{{ a.kind }}">
+  <div class="alert-meta">
+    <span class="tag">{{ a.kind }}</span>
+    {% for n in a.nucleos %}<span>{{ n }}</span>{% endfor %}
+    {% for l in a.lines %}{{ line_pill(l) }}{% endfor %}
+    {% if a.start %}<span>· desde <time datetime="{{ a.start }}">{{ a.start|fecha }}</time></span>{% endif %}
+  </div>
+  <p>{{ a.text }}</p>
+</li>
+{%- endmacro %}
+
+{% macro delay_bars(rows) -%}
+{% set top = rows|map(attribute='trips')|max if rows else 1 %}
+<ul class="bars">
+  {% for r in rows %}
+  <li class="bar-row" title="{{ r.label }}: {{ r.trips }} trenes">
+    <span class="name">{{ r.label }}</span>
+    <span class="bar-track"><span class="bar-fill" style="width:{{ (100 * r.trips / top) if top else 0 }}%"></span></span>
+    <span class="val">{{ r.trips|num }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro punctuality_bars(rows) -%}
+<ul class="bars">
+  {% for r in rows if r.trips %}
+  <li class="bar-row" title="{{ r.nucleo }}: {{ r.punctual_pct|num(1) }} % puntuales de {{ r.trips }} trenes">
+    <span class="name">{{ r.nucleo }}</span>
+    <span class="bar-track"><span class="bar-fill" style="width:{{ r.punctual_pct }}%"></span></span>
+    <span class="val">{{ r.punctual_pct|num(1) }} %</span>
+  </li>
+  {% endfor %}
+</ul>
+{%- endmacro %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block description %}Catálogo de los datasets abiertos de Renfe, leído de la API CKAN de data.renfe.com.{% endblock %}
+
+{% block content %}
+{% set realtime = catalog|selectattr('realtime')|list %}
+{% set static = catalog|rejectattr('realtime')|list %}
+<div class="page-head">
+  <h1>Catálogo de datos abiertos</h1>
+  <p>Los {{ catalog|length }} datasets publicados en <a href="https://data.renfe.com/dataset">data.renfe.com</a>, leídos de su API CKAN en cada actualización. {{ realtime|length }} de ellos son feeds en tiempo real.</p>
+</div>
+
+{% macro dataset_card(d) %}
+<article class="card dataset">
+  <h3><a href="{{ d.url }}">{{ d.title }}</a></h3>
+  {% if d.description %}<p>{{ d.description|truncate(220) }}</p>{% endif %}
+  <div class="foot">
+    <span class="tags">
+      {% if d.realtime %}<span class="tag live">Tiempo real</span>{% endif %}
+      {% for f in d.formats %}<span class="tag">{{ f }}</span>{% endfor %}
+    </span>
+    <span>Modificado: {{ d.modified[:10] if d.modified else "—" }}</span>
+  </div>
+</article>
+{% endmacro %}
+
+{% if realtime %}
+<section>
+  <h2>Tiempo real</h2>
+  <p class="sub">Feeds GTFS-Realtime que Renfe actualiza cada pocos segundos</p>
+  <div class="datasets">{% for d in realtime|sort(attribute='title') %}{{ dataset_card(d) }}{% endfor %}</div>
+</section>
+{% endif %}
+
+<section>
+  <h2>Datasets estáticos</h2>
+  <p class="sub">Horarios GTFS, estaciones, flota y volumen de viajeros</p>
+  <div class="datasets">{% for d in static|sort(attribute='title') %}{{ dataset_card(d) }}{% endfor %}</div>
+</section>
+
+<section class="grid-2">
+  <div class="card" id="fuentes">
+    <h2>Fuentes de esta actualización</h2>
+    <p class="sub">Si una fuente falla, el resto del sitio se publica igualmente</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fuente</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for s in meta.sources %}
+          <tr><td><a href="{{ s.url }}">{{ s.name }}</a></td><td>{% if s.ok %}<span class="ok">✓ OK</span>{% else %}<span class="ko" title="{{ s.error }}">✕ Error</span>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" id="api">
+    <h2>Datos procesados en JSON</h2>
+    <p class="sub">Puedes reutilizarlos directamente; se regeneran cada hora</p>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td><a href="data/live.json">data/live.json</a></td><td>Trenes en circulación con posición, línea y retraso</td></tr>
+          <tr><td><a href="data/delays.json">data/delays.json</a></td><td>Puntualidad de Cercanías por núcleo y línea</td></tr>
+          <tr><td><a href="data/alerts.json">data/alerts.json</a></td><td>Avisos con las líneas afectadas</td></tr>
+          <tr><td><a href="data/history.json">data/history.json</a></td><td>Serie horaria de indicadores (30 días)</td></tr>
+          <tr><td><a href="data/stations.json">data/stations.json</a></td><td>Estaciones con coordenadas</td></tr>
+          <tr><td><a href="data/ridership.json">data/ridership.json</a></td><td>Viajeros por núcleo y franja horaria</td></tr>
+          <tr><td><a href="data/catalog.json">data/catalog.json</a></td><td>Este catálogo</td></tr>
+          <tr><td><a href="data/build.json">data/build.json</a></td><td>Metadatos de la última generación</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

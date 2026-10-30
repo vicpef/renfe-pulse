@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block description %}Buscador y mapa de todas las estaciones donde opera Renfe.{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
+
+{% block content %}
+{% set provinces = stations|map(attribute='province')|reject('equalto', '')|unique|sort %}
+<div class="page-head">
+  <h1>Estaciones</h1>
+  <p>Las {{ stations|length|num }} estaciones del dataset «Estaciones. Listado completo»: {{ stations|selectattr('cercanias')|list|length|num }} con servicio de Cercanías y {{ stations|selectattr('ancho_metrico')|list|length|num }} de ancho métrico.</p>
+</div>
+
+<section>
+  <div class="filters">
+    <input type="search" id="station-search" placeholder="Buscar estación, población o código…" aria-label="Buscar estaciones">
+    <select id="station-province" aria-label="Filtrar por provincia">
+      <option value="">Todas las provincias</option>
+      {% for p in provinces %}<option>{{ p }}</option>{% endfor %}
+    </select>
+    <label class="check"><input type="checkbox" id="station-cercanias"> Solo Cercanías</label>
+    <span class="count" id="station-count"></span>
+  </div>
+  <div id="station-map" class="map short" role="region" aria-label="Mapa de estaciones"></div>
+</section>
+
+<section class="card">
+  <div class="table-wrap">
+    <table id="station-table">
+      <thead><tr><th>Estación</th><th>Población</th><th>Provincia</th><th>Servicios</th><th class="num">Código</th></tr></thead>
+      <tbody>
+      {% for st in stations %}
+        <tr data-province="{{ st.province }}" data-cercanias="{{ 1 if st.cercanias else 0 }}" data-code="{{ st.code }}">
+          <td>{{ st.name }}</td><td>{{ st.town }}</td><td>{{ st.province }}</td>
+          <td><span class="tags">{% if st.cercanias %}<span class="tag">Cercanías</span>{% endif %}{% if st.ancho_metrico %}<span class="tag">Ancho métrico</span>{% endif %}</span></td>
+          <td class="num">{{ st.code }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script type="application/json" id="stations-data">{{ station_points|tojson_safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="static/app.js"></script>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Renfe Pulse</title>
+  <meta name="description" content="{% block description %}Panel no oficial con los datos abiertos de Renfe: trenes en circulación, puntualidad de Cercanías, avisos, estaciones y viajeros.{% endblock %}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%232a78d6'/%3E%3Cpath d='M4 13h3l2-5 3 9 2-6 1.5 2H20' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body data-page="{{ page }}">
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="currentColor"/><path d="M4 13h3l2-5 3 9 2-6 1.5 2H20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Renfe Pulse
+      </a>
+      <nav class="site-nav" aria-label="Secciones">
+        {% for file, label in pages %}
+        <a href="{{ file }}"{% if file == page %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="wrap site-footer">
+    <p>Datos: <a href="https://data.renfe.com">Renfe Data</a>, licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es">CC BY 4.0</a>. Proyecto no oficial, sin relación con Renfe.</p>
+    <p>Generado el <time datetime="{{ meta.generated_at }}">{{ meta.generated_at|fecha }}</time> · se actualiza cada hora · <a href="catalogo.html#fuentes">estado de las fuentes</a> · <a href="catalogo.html#api">datos en JSON</a></p>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

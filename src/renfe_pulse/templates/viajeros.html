@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block description %}Volumen de viajeros por franja horaria en las estaciones de Cercanías de Renfe (2018).{% endblock %}
+
+{% block content %}
+{% set top_total = ridership[0].total if ridership else 1 %}
+<div class="page-head">
+  <h1>Viajeros de Cercanías por franja horaria</h1>
+  <p>Viajeros que suben y bajan en cada estación por tramos de media hora en un día laborable tipo. Datos de 2018, el último año publicado por Renfe en este dataset.</p>
+</div>
+
+{% if ridership %}
+<section class="card">
+  <div class="filters">
+    <select id="rider-nucleo" aria-label="Elegir núcleo">
+      {% for n in ridership %}<option value="{{ loop.index0 }}">{{ n.nucleo }}</option>{% endfor %}
+    </select>
+    <span class="count" id="rider-total"></span>
+  </div>
+  <div class="grid-2">
+    <div>
+      <h2>Perfil horario</h2>
+      <p class="sub">Viajeros por tramo de 30 minutos</p>
+      <ul class="legend">
+        <li><span class="swatch" style="background:var(--series-1)"></span>Suben</li>
+        <li><span class="swatch" style="background:var(--series-2)"></span>Bajan</li>
+      </ul>
+      <div class="chart-box tall" id="chart-rider" aria-label="Perfil horario de viajeros"></div>
+    </div>
+    <div>
+      <h2>Estaciones con más viajeros</h2>
+      <p class="sub">Subidas + bajadas en el día</p>
+      <ul class="bars" id="rider-stations"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Comparativa de núcleos</h2>
+  <p class="sub">Total de subidas y bajadas registradas en el día</p>
+  <ul class="bars">
+    {% for n in ridership %}
+    <li class="bar-row" title="{{ n.nucleo }}: {{ n.total|num }} viajeros">
+      <span class="name">{{ n.nucleo }}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:{{ 100 * n.total / top_total }}%"></span></span>
+      <span class="val">{{ n.total|num }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+<script type="application/json" id="ridership-data">{{ ridership|tojson_safe }}</script>
+{% else %}
+<p class="empty">El dataset de viajeros no estaba disponible en esta actualización.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="static/app.js"></script>
+{% endblock %}

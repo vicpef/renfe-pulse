@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import alert_item %}
+{% block description %}Incidencias y avisos publicados por Renfe para Cercanías: obras, ascensores, servicios alternativos.{% endblock %}
+
+{% block content %}
+{% set nucleo_names = alerts|map(attribute='nucleos')|sum(start=[])|unique|sort %}
+{% set kinds = alerts|map(attribute='kind')|unique|sort %}
+<div class="page-head">
+  <h1>Incidencias y avisos</h1>
+  <p>Avisos publicados en el feed GTFS-Realtime de incidencias de Renfe, con las líneas afectadas. El feed no indica fecha de fin, así que algunos avisos pueden llevar tiempo publicados.</p>
+  <div class="stamp">Feed actualizado el <time datetime="{{ meta.feeds.alerts }}">{{ meta.feeds.alerts|fecha }}</time></div>
+</div>
+{% if 'alerts' in meta.stale_feeds %}
+<p class="callout">⚠️ Renfe no actualiza este feed desde el {{ meta.feeds.alerts|fecha(false) }}: los avisos pueden no estar vigentes. Consulta también <a href="https://www.renfe.com/es/es/cercanias">renfe.com</a>.</p>
+{% endif %}
+
+<section>
+  <div class="filters">
+    <input type="search" id="alert-search" placeholder="Buscar en los avisos…" aria-label="Buscar en los avisos">
+    <select id="alert-nucleo" aria-label="Filtrar por núcleo">
+      <option value="">Todos los núcleos</option>
+      {% for n in nucleo_names %}<option>{{ n }}</option>{% endfor %}
+    </select>
+    <select id="alert-kind" aria-label="Filtrar por tipo">
+      <option value="">Todos los tipos</option>
+      {% for k in kinds %}<option>{{ k }}</option>{% endfor %}
+    </select>
+    <span class="count" id="alert-count">{{ alerts|length }} avisos</span>
+  </div>
+  {% if alerts %}
+  <ul class="alerts" id="alert-list">{% for a in alerts %}{{ alert_item(a) }}{% endfor %}</ul>
+  {% else %}<p class="empty">No hay avisos publicados.</p>{% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="static/app.js"></script>{% endblock %}
